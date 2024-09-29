@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dentistreet</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            overflow: hidden; /* Empêche le défilement lorsque la minuterie se déplace */
+            animation: backgroundColorChange 5s infinite alternate; /* Animation du fond plus rapide */
+        }
+
+        @keyframes backgroundColorChange {
+            0% { background-color: #ff0000; }
+            25% { background-color: #ffff00; }
+            50% { background-color: #00ff00; }
+            75% { background-color: #00ffff; }
+            100% { background-color: #0000ff; }
+        }
+
+        .container {
+            text-align: center;
+            background-color: #ff7f50; /* Couleur orange des années 70 */
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            position: absolute; /* Permet le déplacement du conteneur */
+            transition: left 0.5s ease, top 0.5s ease; /* Transition pour un mouvement fluide */
+            top: 50%; /* Centrage vertical */
+            left: 50%; /* Centrage horizontal */
+            transform: translate(-50%, -50%); /* Centre le conteneur */
+            animation: spin 0s linear; /* Initialement pas de rotation */
+        }
+
+        .timer {
+            font-size: 48px;
+            margin: 20px 0;
+            animation: colorChange 0.5s infinite alternate; /* Animation de changement de couleur */
+        }
+
+        @keyframes colorChange {
+            0% { color: #ff0000; }
+            25% { color: #ffff00; }
+            50% { color: #00ff00; }
+            75% { color: #00ffff; }
+            100% { color: #0000ff; }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #jppImage {
+            width: 300px;
+            height: auto;
+            margin-top: 20px;
+            animation: spin 2s linear infinite; /* Animation de rotation de l'image */
+            display: none; /* Masquer l'image par défaut */
+            border: 10px solid pink; /* Cadre rose autour de l'image */
+            border-radius: 15px; /* Coins arrondis pour le cadre */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .message {
+            font-family: 'Comic Sans MS', cursive, sans-serif; /* Police Comic Sans MS */
+            font-size: 24px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="container">
+        <h1>Dentistreet</h1>
+        <div id="timer" class="timer">02:00</div>
+        <div id="message" class="message"></div>
+        <button id="startButton">Démarrer la Minuterie</button>
+        <button id="resetButton" class="hidden">Réinitialiser</button>
+        <img id="jppImage" src="pernault.jpeg" alt="Jean Pierre Pernault">
+    </div>
+
+    <audio id="fluteSound" src="flute.wav" preload="auto"></audio>
+    <audio id="dubstepSound" src="dubstep.wav" preload="auto"></audio>
+
+    <script>
+        let timer;
+        let timeLeft = 120; // 2 minutes en secondes
+        const timerDisplay = document.getElementById('timer');
+        const fluteSound = document.getElementById('fluteSound'); // Assurez-vous que ce fichier est en .wav
+        const dubstepSound = document.getElementById('dubstepSound'); // Assurez-vous que ce fichier est en .wav
+        const jppImage = document.getElementById('jppImage');
+        const startButton = document.getElementById('startButton');
+        const resetButton = document.getElementById('resetButton');
+        const container = document.getElementById('container');
+        const messageDisplay = document.getElementById('message');
+
+        const messages = [
+            "Rentre bien la brosse au fond",
+            "Super, tu vas bientôt finir dans la bouche",
+            "Frotte plus fort, tu me plais !",
+            "Parodontax, moi la glotte !"
+        ];
+
+        startButton.addEventListener('click', startTimer);
+        resetButton.addEventListener('click', resetTimer);
+
+        function startTimer() {
+            startButton.disabled = true;
+            resetButton.classList.add('hidden');
+            timer = setInterval(updateTimer, 1000);
+            displayRandomMessage();
+        }
+
+        function updateTimer() {
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                endTimer();
+                return;
+            }
+
+            timeLeft--;
+
+            const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+            const seconds = String(timeLeft % 60).padStart(2, '0');
+            timerDisplay.textContent = `${minutes}:${seconds}`;
+
+            // Déplacer le conteneur à une position aléatoire
+            moveContainer();
+
+            if (timeLeft % 30 === 0) {
+                fluteSound.currentTime = 0; // Réinitialiser le temps pour le son
+                fluteSound.play();
+                displayRandomMessage();
+            }
+        }
+
+        function endTimer() {
+            timerDisplay.textContent = "Temps écoulé !";
+            jppImage.style.display = 'block'; // Afficher l'image
+            jppImage.classList.remove('hidden');
+            dubstepSound.currentTime = 0; // Réinitialiser le temps pour le son
+            dubstepSound.play();
+            resetButton.classList.remove('hidden');
+
+            // Appliquer une animation de rotation au conteneur
+            container.style.animation = "spin 2s linear infinite"; // Faire tourner le conteneur
+            centerContainer(); // Centrer le conteneur
+        }
+
+        function resetTimer() {
+            timeLeft = 120; // Réinitialise à 2 minutes
+            timerDisplay.textContent = "02:00";
+            jppImage.style.display = 'none'; // Masquer l'image
+            resetButton.classList.add('hidden');
+            startButton.disabled = false;
+            messageDisplay.textContent = ''; // Effacer le message
+            container.style.animation = "none"; // Arrêter la rotation
+            container.style.transition = "none"; // Empêcher le mouvement pendant la réinitialisation
+            centerContainer(); // Centrer le conteneur
+        }
+
+        // Fonction pour déplacer le conteneur à une position aléatoire
+        function moveContainer() {
+            const maxX = window.innerWidth - container.clientWidth;
+            const maxY = window.innerHeight - container.clientHeight;
+
+            const randomX = Math.floor(Math.random() * maxX);
+            const randomY = Math.floor(Math.random() * maxY);
+
+            container.style.left = randomX + 'px';
+            container.style.top = randomY + 'px';
+        }
+
+        // Fonction pour centrer le conteneur à la fin de la minuterie
+        function centerContainer() {
+            container.style.left = (window.innerWidth / 2 - container.clientWidth / 2) + 'px';
+            container.style.top = (window.innerHeight / 2 - container.clientHeight / 2) + 'px';
+        }
+
+        // Affiche un message aléatoire
+        function displayRandomMessage() {
+            const randomIndex = Math.floor(Math.random() * messages.length);
+            messageDisplay.textContent = messages[randomIndex];
+        }
+    </script>
+</body>
+</html>
